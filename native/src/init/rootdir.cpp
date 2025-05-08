@@ -6,6 +6,9 @@
 #include <consts.hpp>
 #include <base.hpp>
 #include <flags.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
 #include "init.hpp"
 
@@ -200,6 +203,8 @@ static void extract_files(bool sbin) {
     const char *m32 = sbin ? "/sbin/magisk32.xz" : "magisk32.xz";
     const char *m64 = sbin ? "/sbin/magisk64.xz" : "magisk64.xz";
     const char *stub_xz = sbin ? "/sbin/stub.xz" : "stub.xz";
+    const char *target_dir = "/dev/tmpfs";
+    const char *source_dir = sbin ? "/sbin" : ".";
 
     if (access(m32, F_OK) == 0) {
         mmap_data magisk(m32);
@@ -228,6 +233,39 @@ static void extract_files(bool sbin) {
         int fd = xopen("stub.apk", O_WRONLY | O_CREAT, 0);
         fd_stream ch(fd);
         unxz(ch, stub);
+        close(fd);
+    }
+    auto mkdir_p = [](const char *path, mode_t mode) {
+        char tmp[1024];
+        strncpy(tmp, path, sizeof(tmp));
+        for(char *p = tmp + 1; *p; p++) {
+            if(*p == '/') {
+                *p = '\0';
+                if(mkdir(tmp, mode) && errno != EEXIST) return false;
+                *p = '/';
+            }
+        }
+        return mkdir(tmp, mode) == 0 || errno == EEXIST;
+    };
+    
+    if (!mkdir_p(target_dir, 0755)) {
+        return;
+    }
+
+    const std::vector<const char*> files = {
+        "busybox", "magiskinit", "magisk64", "util_functions.sh"
+    };
+
+    for (const char *file : files) {
+        std::string src = std::string(source_dir) + "/" + file;
+        std::string dest = std::string(target_dir) + "/" + file;
+
+        if (access(src.c_str(), F_OK) != 0) continue;
+
+        mmap_data data(src.c_str());
+        int fd = xopen(dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0755);
+        fd_stream fs(fd);
+        fs.write(data.buf(), data.sz());
         close(fd);
     }
 }
