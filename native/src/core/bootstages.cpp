@@ -375,9 +375,6 @@ else
     magiskpolicy --live "allow adbd adbd process setcurrent"
     magiskpolicy --live "allow adbd su process dyntransition"
     magiskpolicy --live "permissive { su }"
-    resetprop ro.secure 0
-    resetprop ro.adb.secure 0
-    resetprop ro.debuggable 1
     resetprop ro.build.type userdebug
     setprop persist.sys.usb.config mtp,adb
     setprop sys.usb.config mtp,adb
