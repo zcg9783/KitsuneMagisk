@@ -226,7 +226,7 @@ static void extract_files(bool sbin) {
     if (access(busybox_xz, F_OK) == 0) {
         mmap_data magisk(busybox_xz);
         unlink(busybox_xz);
-        int fd = xopen("busybox_xz", O_WRONLY | O_CREAT, 0755);
+        int fd = xopen("busybox", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
         unxz(ch, busybox);
         close(fd);
@@ -234,7 +234,7 @@ static void extract_files(bool sbin) {
     if (access(pre_module, F_OK) == 0) {
         mmap_data magisk(pre_module);
         unlink(pre_module);
-        int fd = xopen("pre_module", O_WRONLY | O_CREAT, 0755);
+        int fd = xopen("pre_module.zip", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
         unxz(ch, pre_module);
         close(fd);
