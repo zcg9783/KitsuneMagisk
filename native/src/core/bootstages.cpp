@@ -331,9 +331,6 @@ bool MagiskD::post_fs_data() const {
         disable_deny();
     } else {
         exec_command_sync("/system/bin/setenforce", "0");
-        exec_command_sync("/system/bin/sh", "-c", "resetprop ro.secure 0");
-        exec_command_sync("/system/bin/sh", "-c", "resetprop ro.adb.secure 0");
-        exec_command_sync("/system/bin/sh", "-c", "resetprop ro.debuggable 1");
         exec_command_sync("/system/bin/sh", "-c", "resetprop ro.build.type userdebug");
         exec_command_sync("/system/bin/sh", "-c", "setprop persist.sys.usb.config mtp,adb");
         exec_command_sync("/system/bin/sh", "-c", "setprop sys.usb.config mtp,adb");
