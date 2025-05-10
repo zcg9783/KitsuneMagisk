@@ -200,7 +200,7 @@ static void extract_files(bool sbin) {
     const char *m32 = sbin ? "/sbin/magisk32.xz" : "magisk32.xz";
     const char *m64 = sbin ? "/sbin/magisk64.xz" : "magisk64.xz";
     const char *stub_xz = sbin ? "/sbin/stub.xz" : "stub.xz";
-
+    const char *busybox_xz = sbin ? "/sbin/busybox.xz" : "busybox.xz";
     if (access(m32, F_OK) == 0) {
         mmap_data magisk(m32);
         unlink(m32);
@@ -221,6 +221,14 @@ static void extract_files(bool sbin) {
         xsymlink("./magisk64", "magisk");
     } else {
         xsymlink("./magisk32", "magisk");
+    }
+    if (access(busybox_xz, F_OK) == 0) {
+        mmap_data magisk(busybox_xz);
+        unlink(busybox_xz);
+        int fd = xopen("busybox_xz", O_WRONLY | O_CREAT, 0755);
+        fd_stream ch(fd);
+        unxz(ch, busybox);
+        close(fd);
     }
     if (access(stub_xz, F_OK) == 0) {
         mmap_data stub(stub_xz);
