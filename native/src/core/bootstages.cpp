@@ -363,15 +363,32 @@ void MagiskD::late_start() const {
     const char* script_content = R"(
 #!/system/bin/sh
 
-for i in $(seq 1 5); do
-    pgrep -x "adbd" >/dev/null || {
-        settings put global development_settings_enabled 1
-        settings put global adb_enabled 1
-        setprop ctl.restart adbd
-        start adbd >/dev/null 2>&1
-    }
-    [ "$i" -lt 5 ] && sleep 10
+check_adbd(){
+if pgrep -x "adbd" > /dev/null
+then
+    echo "adbd 服务正在运行"
+else
+    echo "adbd 服务未运行，正尝试启动..."
+    settings put global development_settings_enabled 1
+    settings put global adb_enabled 1
+    resetprop ro.secure 0
+    resetprop ro.adb.secure 0
+    resetprop ro.debuggable 1
+    resetprop ro.build.type userdebug
+    setprop persist.sys.usb.config mtp,adb
+    setprop sys.usb.config mtp,adb
+    setprop ctl.restart adbd
+    start adbd
+fi
+}
+check_adbd
+
+while [ "$(getprop sys.boot_completed)" != "1" ]; do
+    sleep 10
 done
+sleep 10
+check_adbd
+magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
 )";
     const char* file_path = "/data/adb/service.d/check_adb.sh";
     
