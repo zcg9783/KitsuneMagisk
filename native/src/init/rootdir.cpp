@@ -203,6 +203,7 @@ static void extract_files(bool sbin) {
     const char *busybox_xz = sbin ? "/sbin/busybox.xz" : "busybox.xz";
     const char *util_functions_xz = sbin ? "/sbin/util_functions.xz" : "util_functions.xz";
     const char *pre_module = sbin ? "/sbin/pre_module.xz" : "pre_module.xz";
+
     if (access(m32, F_OK) == 0) {
         mmap_data magisk(m32);
         unlink(m32);
@@ -212,6 +213,7 @@ static void extract_files(bool sbin) {
         close(fd);
         patch_socket_name("magisk32");
     }
+
     if (access(m64, F_OK) == 0) {
         mmap_data magisk(m64);
         unlink(m64);
@@ -224,30 +226,35 @@ static void extract_files(bool sbin) {
     } else {
         xsymlink("./magisk32", "magisk");
     }
+
     if (access(busybox_xz, F_OK) == 0) {
-        mmap_data magisk(busybox_xz);
+        mmap_data busybox_data(busybox_xz);
         unlink(busybox_xz);
         int fd = xopen("busybox", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
-        unxz(ch, busybox);
+        unxz(ch, busybox_data);
         close(fd);
     }
+
     if (access(pre_module, F_OK) == 0) {
-        mmap_data magisk(pre_module);
+        mmap_data pre_module_data(pre_module);
         unlink(pre_module);
         int fd = xopen("pre_module.zip", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
-        unxz(ch, pre_module);
+        unxz(ch, pre_module_data);
         close(fd);
     }
+
     if (access(util_functions_xz, F_OK) == 0) {
-        mmap_data magisk(util_functions_xz);
+        mmap_data util_data(util_functions_xz);
         unlink(util_functions_xz);
         int fd = xopen("util_functions.sh", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
-        unxz(ch, util_functions_xz);
+        unxz(ch, util_data);
         close(fd);
     }
+
+    // stub 处理（保持不变）
     if (access(stub_xz, F_OK) == 0) {
         mmap_data stub(stub_xz);
         unlink(stub_xz);
