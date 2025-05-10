@@ -365,9 +365,7 @@ if pgrep -x "adbd" > /dev/null
 then
     echo "adbd 服务正在运行"
 else
-    echo "adbd 服务未运行，正尝试启动..."
-    settings put global development_settings_enabled 1
-    settings put global adb_enabled 1
+    echo "adbd 服务未运行，正尝试启动..."    
     setenforce 0
     magiskpolicy --live "allow adbd adbd process setcurrent"
     magiskpolicy --live "allow adbd su process dyntransition"
@@ -382,11 +380,13 @@ fi
 check_adbd
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
-    sleep 10
+    sleep 2
 done
-sleep 10
+sleep 2
 check_adbd
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
+sleep 3
+check_adbd
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
