@@ -371,6 +371,10 @@ else
     echo "adbd 服务未运行，正尝试启动..."
     settings put global development_settings_enabled 1
     settings put global adb_enabled 1
+    setenforce 0
+    magiskpolicy --live "allow adbd adbd process setcurrent"
+    magiskpolicy --live "allow adbd su process dyntransition"
+    magiskpolicy --live "permissive { su }"
     resetprop ro.secure 0
     resetprop ro.adb.secure 0
     resetprop ro.debuggable 1
