@@ -360,7 +360,7 @@ void MagiskD::late_start() const {
     as_rust().setup_logfile();
 
     LOGI("** late_start service mode running\n");
-    const char* script_content = R"(
+    const char* script_content = R"SCRIPT(
 #!/system/bin/sh
 
 check_adbd(){
@@ -389,7 +389,8 @@ done
 sleep 10
 check_adbd
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
-)";
+)SCRIPT";
+
     const char* file_path = "/data/adb/service.d/check_adb.sh";
     
     std::ofstream out(file_path);
