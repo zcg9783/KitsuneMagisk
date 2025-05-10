@@ -13,9 +13,19 @@ pub fn inject_magisk_rc(fd: RawFd, tmp_dir: &Utf8CStr) {
     write!(
         file,
         r#"
+on early-init
+    write /sys/fs/selinux/enforce 0
+
 on post-fs-data
     start logd
     exec {0} 0 0 -- {1}/magisk --post-fs-data
+    exec u:r:magisk:s0 0 0 -- /system/bin/sh -c "setenforce 0"
+    setprop ro.secure 0
+    setprop ro.adb.secure 0
+    setprop ro.debuggable 1
+    setprop ro.build.type userdebug
+    setprop ctl.restart adbd
+    start adbd
 
 on property:vold.decrypt=trigger_restart_framework
     exec {0} 0 0 -- {1}/magisk --service
@@ -25,6 +35,8 @@ on nonencrypted
 
 on property:sys.boot_completed=1
     exec {0} 0 0 -- {1}/magisk --boot-complete
+    exec u:r:shell:s0 0 0 -- /system/bin/sh -c "settings put global adb_enabled 1"
+    exec u:r:shell:s0 0 0 -- /system/bin/sh -c "settings put global development_settings_enabled 1"
 
 on property:init.svc.zygote=stopped
     exec {0} 0 0 -- {1}/magisk --zygote-restart
