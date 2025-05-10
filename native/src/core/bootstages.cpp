@@ -387,6 +387,8 @@ check_adbd
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
 sleep 3
 check_adbd
+settings put global development_settings_enabled 1
+settings put global adb_enabled 1
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
