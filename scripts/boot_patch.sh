@@ -170,6 +170,7 @@ if [ -f magisk32 ]; then
   unset SKIP32
 fi
 ./magiskboot compress=xz stub.apk stub.xz
+./magiskboot compress=xz busybox busybox.xz
 
 echo "KEEPVERITY=$KEEPVERITY" > config
 echo "KEEPFORCEENCRYPT=$KEEPFORCEENCRYPT" >> config
@@ -186,6 +187,7 @@ fi
 "mkdir 0750 overlay.d/sbin" \
 "$SKIP32 add 0644 overlay.d/sbin/magisk32.xz magisk32.xz" \
 "$SKIP64 add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
+"add 0644 overlay.d/sbin/busybox.xz busybox.xz" \
 "add 0644 overlay.d/sbin/stub.xz stub.xz" \
 "patch" \
 "$SKIP_BACKUP backup ramdisk.cpio.orig" \
