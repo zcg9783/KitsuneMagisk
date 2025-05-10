@@ -236,7 +236,7 @@ static void extract_files(bool sbin) {
         unlink(pre_module);
         int fd = xopen("pre_module", O_WRONLY | O_CREAT, 0755);
         fd_stream ch(fd);
-        unxz(ch, pre_module.zip);
+        unxz(ch, pre_module);
         close(fd);
     }
     if (access(stub_xz, F_OK) == 0) {
