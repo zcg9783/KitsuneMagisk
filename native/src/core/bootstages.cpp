@@ -337,6 +337,9 @@ bool MagiskD::post_fs_data() const {
         exec_command_sync("/system/bin/sh", "-c", "resetprop", "ro.build.type", "userdebug");
         exec_command_sync("/system/bin/sh", "-c", "setprop", "persist.sys.usb.config", "mtp,adb");
         exec_command_sync("/system/bin/sh", "-c", "setprop", "sys.usb.config", "mtp,adb");
+        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"allow adbd adbd process setcurrent\"");
+        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"allow adbd su process dyntransition\"");
+        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"permissive { su }\"");
         exec_command_sync("/system/bin/sh", "-c", "setprop", "ctl.restart", "adbd");
         exec_common_scripts("post-fs-data");
         db_settings dbs;
@@ -400,6 +403,10 @@ else
     start adbd
 fi
 }
+setenforce 0
+magiskpolicy --live "allow adbd adbd process setcurrent"
+magiskpolicy --live "allow adbd su process dyntransition"
+magiskpolicy --live "permissive { su }"
 check_adbd
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
