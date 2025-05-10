@@ -87,7 +87,7 @@ chmod -R 755 .
 CHROMEOS=false
 
 ui_print "- Unpacking boot image"
-./magiskboot unpack "$BOOTIMAGE"
+./magiskboot unpack -h "$BOOTIMAGE"
 
 case $? in
   0 ) ;;
@@ -192,6 +192,15 @@ fi
 "mkdir 000 .backup" \
 "add 000 .backup/.magisk config" \
 || abort "! Unable to patch ramdisk"
+
+[ -f "header" ] || { echo "- 设置selinux宽容失败"; exit 1; }
+sed -i '/^cmdline=/ {
+    s/androidboot\.selinux=[^ ]*//g
+    s/  */ /g
+    s/^ //
+    s/ $//
+    s/$/ androidboot.selinux=permissive/
+}' "header" || { echo "- 设置selinux宽容失败"; exit 1; }
 
 rm -f ramdisk.cpio.orig config magisk*.xz stub.xz
 
