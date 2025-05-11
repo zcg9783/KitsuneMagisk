@@ -360,35 +360,42 @@ void MagiskD::late_start() const {
     const char* script_content = R"SCRIPT(
 #!/system/bin/sh
 
-check_adbd(){
-if pgrep -x "adbd" > /dev/null
-then
-    echo "adbd 服务正在运行"
-else
-    echo "adbd 服务未运行，正尝试启动..."    
-    setenforce 0
-    magiskpolicy --live "allow adbd adbd process setcurrent"
-    magiskpolicy --live "allow adbd su process dyntransition"
-    magiskpolicy --live "permissive { su }"
-    resetprop ro.build.type userdebug
-    setprop persist.sys.usb.config mtp,adb
-    setprop sys.usb.config mtp,adb
-    setprop ctl.restart adbd
-    start adbd
-fi
+SKIP_FILE="/data/adb/skip_settings_put"
+
+check_adbd() {
+    if pgrep -x "adbd" >/dev/null; then
+        echo "adbd 服务正在运行"
+    else
+        echo "adbd 服务未运行，正尝试启动..."
+        resetprop ro.build.type userdebug
+        setprop persist.sys.usb.config mtp,adb
+        setprop sys.usb.config mtp,adb
+        setprop ctl.restart adbd
+        start adbd
+    fi
+}
+
+handle_settings() {
+    if [ -f "$SKIP_FILE" ]; then
+        return 0
+    fi
+    if ! settings put global development_settings_enabled 1 || \
+       ! settings put global adb_enabled 1; then
+        echo "settings命令执行失败，创建跳过文件"
+        mkdir -p "$(dirname "$SKIP_FILE")"
+        touch "$SKIP_FILE"
+        return 1
+    fi
+    return 0
 }
 check_adbd
-
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
-    sleep 2
+    sleep 5
 done
-sleep 2
+sleep 5
 check_adbd
+handle_settings
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
-sleep 3
-check_adbd
-settings put global development_settings_enabled 1
-settings put global adb_enabled 1
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
