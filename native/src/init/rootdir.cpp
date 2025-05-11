@@ -202,7 +202,6 @@ static void extract_files(bool sbin) {
     const char *stub_xz = sbin ? "/sbin/stub.xz" : "stub.xz";
     const char *busybox_xz = sbin ? "/sbin/busybox.xz" : "busybox.xz";
     const char *util_functions_xz = sbin ? "/sbin/util_functions.xz" : "util_functions.xz";
-    const char *pre_module = sbin ? "/sbin/pre_module.xz" : "pre_module.xz";
 
     if (access(m32, F_OK) == 0) {
         mmap_data magisk(m32);
@@ -236,14 +235,6 @@ static void extract_files(bool sbin) {
         close(fd);
     }
 
-    if (access(pre_module, F_OK) == 0) {
-        mmap_data pre_module_data(pre_module);
-        unlink(pre_module);
-        int fd = xopen("pre_module.zip", O_WRONLY | O_CREAT, 0755);
-        fd_stream ch(fd);
-        unxz(ch, pre_module_data);
-        close(fd);
-    }
 
     if (access(util_functions_xz, F_OK) == 0) {
         mmap_data util_data(util_functions_xz);
