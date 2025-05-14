@@ -165,44 +165,6 @@ class MainActivity : SplashActivity<ActivityMainMd2Binding>() {
     }
 
     private fun showUnsupportedMessage() {
-        if (Info.env.isUnsupported) {
-            MagiskDialog(this).apply {
-                setTitle(R.string.unsupport_magisk_title)
-                setMessage(R.string.unsupport_magisk_msg, Const.Version.MIN_VERSION)
-                setButton(MagiskDialog.ButtonType.POSITIVE) { text = android.R.string.ok }
-                setCancelable(false)
-            }.show()
-        }
-
-        if (!Info.isEmulator && Info.env.isActive && System.getenv("PATH")
-                ?.split(':')
-                ?.filterNot { File("$it/magisk").exists() }
-                ?.any { File("$it/su").exists() } == true) {
-            MagiskDialog(this).apply {
-                setTitle(R.string.unsupport_general_title)
-                setMessage(R.string.unsupport_other_su_msg)
-                setButton(MagiskDialog.ButtonType.POSITIVE) { text = android.R.string.ok }
-                setCancelable(false)
-            }.show()
-        }
-
-        if (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0) {
-            MagiskDialog(this).apply {
-                setTitle(R.string.unsupport_general_title)
-                setMessage(R.string.unsupport_system_app_msg)
-                setButton(MagiskDialog.ButtonType.POSITIVE) { text = android.R.string.ok }
-                setCancelable(false)
-            }.show()
-        }
-
-        if (applicationInfo.flags and ApplicationInfo.FLAG_EXTERNAL_STORAGE != 0) {
-            MagiskDialog(this).apply {
-                setTitle(R.string.unsupport_general_title)
-                setMessage(R.string.unsupport_external_storage_msg)
-                setButton(MagiskDialog.ButtonType.POSITIVE) { text = android.R.string.ok }
-                setCancelable(false)
-            }.show()
-        }
     }
 
     private fun askForHomeShortcut() {
