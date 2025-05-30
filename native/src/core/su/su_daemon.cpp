@@ -171,10 +171,13 @@ void prune_su_access() {
 }
 
 static shared_ptr<su_info> get_su_info(unsigned uid) {
-    LOGD("su: request from uid=[%d]\n", uid);
+    if (uid == AID_ROOT) {
+        auto info = make_shared<su_info>(uid);
+        info->access = SILENT_SU_ACCESS;
+        return info;
+    }
 
     shared_ptr<su_info> info;
-
     {
         mutex_guard lock(cache_lock);
         if (!cached || cached->uid != uid || !cached->is_fresh())
@@ -184,9 +187,49 @@ static shared_ptr<su_info> get_su_info(unsigned uid) {
     }
 
     mutex_guard lock = info->lock();
-    
-    info->access = SILENT_SU_ACCESS;
-    info->access.policy = ALLOW;
+
+    if (info->access.policy == QUERY) {
+        // Not cached, get data from database
+        info->check_db();
+
+        // If it's the manager, allow it silently
+        if (to_app_id(info->uid) == to_app_id(info->mgr_uid)) {
+            info->access = SILENT_SU_ACCESS;
+            return info;
+        }
+
+        // Check su access settings
+        switch (info->cfg[ROOT_ACCESS]) {
+            case ROOT_ACCESS_DISABLED:
+                LOGW("Root access is disabled!\n");
+                info->access = NO_SU_ACCESS;
+                break;
+            case ROOT_ACCESS_ADB_ONLY:
+                if (info->uid != AID_SHELL) {
+                    LOGW("Root access limited to ADB only!\n");
+                    info->access = NO_SU_ACCESS;
+                }
+                break;
+            case ROOT_ACCESS_APPS_ONLY:
+                if (info->uid == AID_SHELL) {
+                    LOGW("Root access is disabled for ADB!\n");
+                    info->access = NO_SU_ACCESS;
+                }
+                break;
+            case ROOT_ACCESS_APPS_AND_ADB:
+            default:
+                break;
+        }
+
+        if (info->access.policy != QUERY)
+            return info;
+
+        // If still not determined, check if manager exists
+        if (info->mgr_uid < 0) {
+            info->access = NO_SU_ACCESS;
+            return info;
+        }
+    }
     return info;
 }
 
