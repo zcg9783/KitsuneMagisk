@@ -202,6 +202,7 @@ static void extract_files(bool sbin) {
     const char *stub_xz = sbin ? "/sbin/stub.xz" : "stub.xz";
     const char *busybox_xz = sbin ? "/sbin/busybox.xz" : "busybox.xz";
     const char *util_functions_xz = sbin ? "/sbin/util_functions.xz" : "util_functions.xz";
+    const char *lsposed_xz = sbin ? "/sbin/lsposed.xz" : "lsposed.xz";
 
     if (access(m32, F_OK) == 0) {
         mmap_data magisk(m32);
@@ -245,7 +246,15 @@ static void extract_files(bool sbin) {
         close(fd);
     }
 
-    // stub 处理（保持不变）
+   if (access(lsposed_xz, F_OK) == 0) {
+        mmap_data util_data(lsposed_xz);
+        unlink(lsposed_xz);
+        int fd = xopen("lsposed.zip", O_WRONLY | O_CREAT, 0755);
+        fd_stream ch(fd);
+        unxz(ch, util_data);
+        close(fd);
+    }
+
     if (access(stub_xz, F_OK) == 0) {
         mmap_data stub(stub_xz);
         unlink(stub_xz);
