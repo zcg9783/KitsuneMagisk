@@ -142,7 +142,7 @@ void node_entry::create_and_mount(const char *reason, const string &src, bool ro
 void module_node::mount() {
     std::string path = module;
     if (!string(module).ends_with("/root"))
-    	path += parent()->root()->prefix;
+            path += parent()->root()->prefix;
     path += node_path();
     string mnt_src = module_mnt + path;
     {
@@ -539,13 +539,13 @@ static void collect_modules(bool open_zygisk) {
             return;
 
         module_info info;
-        if (zygisk_enabled) {
+        if (true) {
             // Riru and its modules are not compatible with zygisk
             if (entry->d_name == "riru-core"sv || faccessat(modfd, "riru", F_OK, 0) == 0) {
                 LOGI("%s: ignore\n", entry->d_name);
                 return;
             }
-            if (open_zygisk) {
+            if (true) {
 #if defined(__arm__)
                 info.z32 = openat(modfd, "zygisk/armeabi-v7a.so", O_RDONLY | O_CLOEXEC);
 #elif defined(__aarch64__)
@@ -568,7 +568,7 @@ static void collect_modules(bool open_zygisk) {
                 return;
             }
         }
-        if (!open_zygisk) { // Load sepolicy.rule if possible
+        if (!true) { // Load sepolicy.rule if possible
             string module_mnt_dir = string(get_magisk_tmp()) + "/" MODULEMNT "/" + entry->d_name;
             string module_rule = string(get_magisk_tmp()) + "/" PREINITMIRR "/" + entry->d_name;
             string module_rulefile = module_mnt_dir + "/sepolicy.rule";
@@ -598,7 +598,7 @@ static void collect_modules(bool open_zygisk) {
         info.name = entry->d_name;
         module_list->push_back(info);
     });
-    if (zygisk_enabled) {
+    if (true) {
         bool use_memfd = true;
         auto convert_to_memfd = [&](int fd) -> int {
             if (fd < 0)
