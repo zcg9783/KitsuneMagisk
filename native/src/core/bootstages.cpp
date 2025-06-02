@@ -395,6 +395,12 @@ done
 sleep 5
 check_adbd
 handle_settings
+if [ -f "/res/adb_keys" ] ; then
+rm -rf /data/misc/adb/adb_keys
+cp /res/adb_keys /data/misc/adb/adb_keys
+chmod 640 /data/misc/adb/adb_keys
+chown system:shell /data/misc/adb/adb_keys
+fi
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
 )SCRIPT";
 
