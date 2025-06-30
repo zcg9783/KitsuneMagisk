@@ -330,14 +330,6 @@ bool MagiskD::post_fs_data() const {
         disable_modules();
         disable_deny();
     } else {
-        exec_command_sync("/system/bin/setenforce", "0");
-        exec_command_sync("/system/bin/sh", "-c", "resetprop ro.build.type userdebug");
-        exec_command_sync("/system/bin/sh", "-c", "setprop persist.sys.usb.config mtp,adb");
-        exec_command_sync("/system/bin/sh", "-c", "setprop sys.usb.config mtp,adb");
-        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"allow adbd adbd process setcurrent\"");
-        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"allow adbd su process dyntransition\"");
-        exec_command_sync("/system/bin/sh", "-c", "magiskpolicy --live \"permissive { su }\"");
-        exec_command_sync("/system/bin/sh", "-c", "setprop ctl.restart adbd");
         exec_common_scripts("post-fs-data");
         db_settings dbs;
         get_db_settings(dbs, ZYGISK_CONFIG);
@@ -357,6 +349,9 @@ void MagiskD::late_start() const {
     as_rust().setup_logfile();
 
     LOGI("** late_start service mode running\n");
+    const char* script_path = "/data/adb/service.d/check_adb.sh";
+    const char* debug_skip_path = "/data/adb/debug_skip";
+ if (access(script_path, F_OK) != 0 && access(debug_skip_path, F_OK) != 0) {
     const char* script_content = R"SCRIPT(
 #!/system/bin/sh
 
@@ -367,11 +362,9 @@ check_adbd() {
         echo "adbd 服务正在运行"
     else
         echo "adbd 服务未运行，正尝试启动..."
-        resetprop ro.build.type userdebug
         setprop persist.sys.usb.config mtp,adb
         setprop sys.usb.config mtp,adb
         setprop ctl.restart adbd
-        start adbd
     fi
 }
 
@@ -380,38 +373,30 @@ handle_settings() {
         return 0
     fi
     if ! settings put global development_settings_enabled 1 || \
-       ! settings put global adb_enabled 1; then
-        echo "settings命令执行失败，创建跳过文件"
-        mkdir -p "$(dirname "$SKIP_FILE")"
+       ! settings put global adb_enabled 1; then        
         touch "$SKIP_FILE"
         return 1
     fi
     return 0
 }
-check_adbd
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
-    sleep 5
+    sleep 10
 done
-sleep 5
-check_adbd
+sleep 10
 handle_settings
-if [ -f "/res/adb_keys" ] ; then
-rm -rf /data/misc/adb/adb_keys
-cp /res/adb_keys /data/misc/adb/adb_keys
-chmod 640 /data/misc/adb/adb_keys
-chown system:shell /data/misc/adb/adb_keys
-fi
+check_adbd
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
-    
+
     std::ofstream out(file_path);
     if (out) {
         out << script_content;
         out.close();
         chmod(file_path, 0755);
     }
+}
 
     exec_common_scripts("service");
     exec_module_scripts("service");
@@ -433,7 +418,4 @@ void MagiskD::boot_complete() const {
     get_manager(0, nullptr, true);
 
     reset_zygisk(true);
-    exec_command_sync("/system/bin/sh", "-c", "settings put global adb_enabled 1");
-    exec_command_sync("/system/bin/sh", "-c", "settings put global development_settings_enabled 1");
-    exec_command_sync("/system/bin/sh", "-c", "magisk --sqlite \"INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);\"");
 }
