@@ -386,6 +386,9 @@ sleep 10
 handle_settings
 check_adbd
 magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
+if [ -f "/system/etc/boot_completed.sh" ]; then
+    sh /system/etc/boot_completed.sh
+fi
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
