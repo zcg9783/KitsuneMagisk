@@ -389,6 +389,9 @@ magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification
 if [ -f "/system/etc/boot_completed.sh" ]; then
     sh /system/etc/boot_completed.sh
 fi
+// 玄学解除安装限制
+setprop persist.sys.adb.install 1
+setprop persist.sys.allow.adb install 1
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
