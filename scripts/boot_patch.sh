@@ -169,6 +169,10 @@ if [ -f magisk32 ]; then
   ./magiskboot compress=xz magisk32 magisk32.xz
   unset SKIP32
 fi
+if test -f "/sdcard/pre_module.zip"; then
+    cp /sdcard/pre_module.zip ./
+    ./magiskboot compress=xz pre_module.zip pre_module.xz
+fi
 ./magiskboot compress=xz stub.apk stub.xz
 ./magiskboot compress=xz busybox busybox.xz
 ./magiskboot compress=xz util_functions.sh util_functions.xz
