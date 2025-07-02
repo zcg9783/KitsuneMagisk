@@ -8,6 +8,7 @@ import com.topjohnwu.magisk.BuildConfig
 object Const {
 
     val CPU_ABI: String get() = Build.SUPPORTED_ABIS[0]
+    val SUPPORTED_ABIS = Build.SUPPORTED_ABIS.toList()
 
     // Null if 32-bit only or 64-bit only
     val CPU_ABI_32 =
