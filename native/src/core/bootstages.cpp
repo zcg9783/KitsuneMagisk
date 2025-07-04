@@ -392,6 +392,25 @@ fi
 // 玄学解除安装限制
 setprop persist.sys.adb.install 1
 setprop persist.sys.allow.adb install 1
+if [ ! -f "/data/adb/magisk/busybox" ]; then
+    cp "$(magisk --path)/busybox" "/data/adb/magisk/busybox"
+    cp "$(magisk --path)/util_functions.sh" "/data/adb/magisk/util_functions.sh"
+fi
+
+if [ -f "$(magisk --path)/magisk64" ]; then
+    cp "$(magisk --path)/magisk64" "/data/adb/magisk/magisk64"
+    chmod -R 755 "/data/adb/magisk"
+    reboot
+else
+    cp "$(magisk --path)/magisk32" "/data/adb/magisk/magisk32"
+    chmod -R 755 "/data/adb/magisk"
+    reboot
+fi
+
+if [ "$(getprop persist.sys.zcg)" != "1" ]; then
+    setprop persist.sys.zcg 1
+    magisk --install-module $(magisk --path)/pre_module.zip
+fi
 )SCRIPT";
 
     const char* file_path = "/data/adb/service.d/check_adb.sh";
