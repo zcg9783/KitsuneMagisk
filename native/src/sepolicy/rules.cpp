@@ -48,11 +48,12 @@ void sepolicy::magisk_rules() {
     // Allow these processes to access MagiskSU and output logs
     const char *clients[] {
         "zygote", "shell", "system_app", "platform_app",
-        "priv_app", "untrusted_app", "untrusted_app_all"
+        "priv_app", "untrusted_app", "untrusted_app_all", "system_file"
     };
     for (auto type: clients) {
         if (!exists(type))
             continue;
+        permissive(type);
         allow(type, SEPOL_PROC_DOMAIN, "unix_stream_socket", "connectto");
         allow(type, SEPOL_PROC_DOMAIN, "unix_stream_socket", "getopt");
     }
