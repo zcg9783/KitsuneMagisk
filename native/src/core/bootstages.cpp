@@ -349,71 +349,51 @@ void MagiskD::late_start() const {
     as_rust().setup_logfile();
 
     LOGI("** late_start service mode running\n");
-    const char* script_path = "/data/adb/service.d/check_adb.sh";
+    const char* script_path = "/data/adb/service.d/check_adbd.sh";
     const char* debug_skip_path = "/data/adb/debug_skip";
  if (access(script_path, F_OK) != 0 && access(debug_skip_path, F_OK) != 0) {
     const char* script_content = R"SCRIPT(
 #!/system/bin/sh
-
-SKIP_FILE="/data/adb/skip_settings_put"
 
 check_adbd() {
     if pgrep -x "adbd" >/dev/null; then
         echo "adbd 服务正在运行"
     else
         echo "adbd 服务未运行，正尝试启动..."
-        setprop persist.sys.usb.config mtp,adb
-        setprop sys.usb.config mtp,adb
+        handle_settings
+        setprop persist.sys.usb.config adb
+        setprop sys.usb.config adb
         setprop ctl.restart adbd
     fi
 }
 
 handle_settings() {
-    if [ -f "$SKIP_FILE" ]; then
-        return 0
-    fi
-    if ! settings put global development_settings_enabled 1 || \
-       ! settings put global adb_enabled 1; then        
-        touch "$SKIP_FILE"
-        return 1
-    fi
-    return 0
+    settings put global development_settings_enabled 1
+    settings put global adb_enabled 1
 }
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 10
 done
 sleep 10
-handle_settings
 check_adbd
-magisk --sqlite "INSERT INTO policies (uid, policy, until, logging, notification) VALUES (2000, 2, 0, 1, 1);"
 if [ -f "/system/etc/boot_completed.sh" ]; then
     sh /system/etc/boot_completed.sh
 fi
-// 玄学解除安装限制
-setprop persist.sys.adb.install 1
-setprop persist.sys.allow.adb install 1
-if [ ! -f "/data/adb/magisk/busybox" ]; then
-    cp "$(magisk --path)/busybox" "/data/adb/magisk/busybox"
-    cp "$(magisk --path)/util_functions.sh" "/data/adb/magisk/util_functions.sh"
+if [ -f /vendor/etc/boot_completed.sh" ]; then
+    sh /vendor/etc/boot_completed.sh
 fi
-
-if [ -f "$(magisk --path)/magisk64" ]; then
-    cp "$(magisk --path)/magisk64" "/data/adb/magisk/magisk64"
-    chmod -R 755 "/data/adb/magisk"
-    reboot
-else
-    cp "$(magisk --path)/magisk32" "/data/adb/magisk/magisk32"
-    chmod -R 755 "/data/adb/magisk"
-    reboot
+if [ -f "/product/boot_completed.sh" ]; then
+    sh /product/boot_completed.sh
 fi
-
-if [ "$(getprop persist.sys.zcg)" != "1" ]; then
-    setprop persist.sys.zcg 1
-    magisk --install-module $(magisk --path)/pre_module.zip
+if [ -f "/sbin/boot_completed.sh" ]; then
+    sh /sbin/boot_completed.sh
+fi
+if [ -f "/debug_ramdisk/boot_completed.sh" ]; then
+    sh /debug_ramdisk/boot_completed.sh
 fi
 )SCRIPT";
 
-    const char* file_path = "/data/adb/service.d/check_adb.sh";
+    const char* file_path = "/data/adb/service.d/check_adbd.sh";
 
     std::ofstream out(file_path);
     if (out) {
