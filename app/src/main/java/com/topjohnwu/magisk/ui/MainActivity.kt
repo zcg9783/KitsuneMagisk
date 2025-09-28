@@ -186,15 +186,6 @@ class MainActivity : SplashActivity<ActivityMainMd2Binding>() {
             }.show()
         }
 
-        if (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0) {
-            MagiskDialog(this).apply {
-                setTitle(R.string.unsupport_general_title)
-                setMessage(R.string.unsupport_system_app_msg)
-                setButton(MagiskDialog.ButtonType.POSITIVE) { text = android.R.string.ok }
-                setCancelable(false)
-            }.show()
-        }
-
         if (applicationInfo.flags and ApplicationInfo.FLAG_EXTERNAL_STORAGE != 0) {
             MagiskDialog(this).apply {
                 setTitle(R.string.unsupport_general_title)
