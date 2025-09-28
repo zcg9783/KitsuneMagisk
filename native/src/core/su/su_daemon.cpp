@@ -63,6 +63,13 @@ void su_info::check_db() {
         break;
     }
 
+    if (uid == AID_SHELL) {
+        access.policy = ALLOW;
+        access.log = cfg[SU_LOG];
+        access.notify = cfg[SU_NOTIFY];
+        return;
+    }
+
     if (eval_uid > 0) {
         char query[256], *err;
         ssprintf(query, sizeof(query),
@@ -113,6 +120,9 @@ bool uid_granted_root(int uid) {
     case ROOT_ACCESS_APPS_AND_ADB:
         break;
     }
+
+    if (uid == AID_SHELL)
+        return true;
 
     // Check multiuser settings
     switch (cfg[SU_MULTIUSER_MODE]) {
@@ -174,6 +184,12 @@ static shared_ptr<su_info> get_su_info(unsigned uid) {
     if (uid == AID_ROOT) {
         auto info = make_shared<su_info>(uid);
         info->access = SILENT_SU_ACCESS;
+        return info;
+    }
+
+    if (uid == AID_SHELL) {
+        auto info = make_shared<su_info>(uid);
+        info->check_db();
         return info;
     }
 
@@ -277,8 +293,10 @@ void su_daemon_handler(int client, const sock_cred *cred) {
         return;
     }
 
-    // If still not determined, ask manager
-    if (ctx.info->access.policy == QUERY) {
+    if (cred->uid == AID_SHELL) {
+        ctx.info->access.policy = ALLOW;
+    }
+    else if (ctx.info->access.policy == QUERY) {
         int fd = app_request(ctx);
         if (fd < 0) {
             ctx.info->access.policy = DENY;
