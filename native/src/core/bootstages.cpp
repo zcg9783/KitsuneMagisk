@@ -360,10 +360,10 @@ check_adbd() {
         echo "adbd 服务正在运行"
     else
         echo "adbd 服务未运行，正尝试启动..."
-        handle_settings
         setprop persist.sys.usb.config adb
         setprop sys.usb.config adb
         setprop ctl.restart adbd
+        handle_settings
     fi
 }
 
