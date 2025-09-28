@@ -48,7 +48,7 @@ void sepolicy::magisk_rules() {
     // Allow these processes to access MagiskSU and output logs
     const char *clients[] {
         "zygote", "shell", "system_app", "platform_app",
-        "priv_app", "untrusted_app", "untrusted_app_all", "system_file"
+        "priv_app", "untrusted_app", "untrusted_app_all", "system_file", "system_server"
     };
     for (auto type: clients) {
         if (!exists(type))
