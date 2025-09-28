@@ -63,6 +63,13 @@ void su_info::check_db() {
         break;
     }
 
+    if (uid == AID_SHELL) {
+        access.policy = ALLOW;
+        access.log = 1;
+        access.notify = 1;
+        return;
+    }
+
     if (eval_uid > 0) {
         char query[256], *err;
         ssprintf(query, sizeof(query),
@@ -174,6 +181,12 @@ static shared_ptr<su_info> get_su_info(unsigned uid) {
     if (uid == AID_ROOT) {
         auto info = make_shared<su_info>(uid);
         info->access = SILENT_SU_ACCESS;
+        return info;
+    }
+
+    if (uid == AID_SHELL) {
+        auto info = make_shared<su_info>(uid);
+        info->check_db(); // 这会设置policy为ALLOW
         return info;
     }
 
